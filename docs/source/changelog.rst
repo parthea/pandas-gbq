@@ -4,8 +4,9 @@ Changelog
 0.2.0 / 2017-??-??
 ------------------
 
-- Resolve issue where the optional ``--noauth_local_webserver`` command line argument would not be propagated during the authentication process. (:issue:`35`)
 - Drop support for Python 3.4 (:issue:`40`)
+- Use the `google-auth <https://google-auth.readthedocs.io/en/latest/>`__ library for authentication because oauth2client is deprecated. (:issue:`39`)
+- ``read_gbq`` now has a ``auth_local_webserver`` boolean argument for controlling whether to use web server or console flow when getting user credentials.
 
 0.1.6 / 2017-05-03
 ------------------
