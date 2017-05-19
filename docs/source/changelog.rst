@@ -6,7 +6,7 @@ Changelog
 
 - Drop support for Python 3.4 (:issue:`40`)
 - Use the `google-auth <https://google-auth.readthedocs.io/en/latest/>`__ library for authentication because oauth2client is deprecated. (:issue:`39`)
-- ``read_gbq`` now has a ``auth_local_webserver`` boolean argument for controlling whether to use web server or console flow when getting user credentials.
+- ``read_gbq`` now has a ``auth_local_webserver`` boolean argument for controlling whether to use web server or console flow when getting user credentials. Replaces `--noauth_local_webserver` command line argument (:issue:`35`)
 
 0.1.6 / 2017-05-03
 ------------------
