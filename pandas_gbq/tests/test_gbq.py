@@ -21,6 +21,7 @@ from pandas.compat.numpy import np_datetime64_compat
 
 
 TABLE_ID = 'new_test'
+DPT_TABLE_ID = 'dpt_test'
 
 
 _IMPORTS = False
@@ -407,7 +408,7 @@ class GBQUnitTests(object):
     def test_to_gbq_should_fail_if_invalid_table_name_passed(self):
         with tm.assertRaises(gbq.NotFoundException):
             gbq.to_gbq(DataFrame(), 'invalid_table_name', project_id="1234")
-
+    
     def test_to_gbq_with_no_project_id_given_should_fail(self):
         with tm.assertRaises(TypeError):
             gbq.to_gbq(DataFrame(), 'dataset.tablename')
@@ -996,6 +997,8 @@ class TestToGBQIntegrationWithServiceAccountKeyPath(object):
                                     private_key=_get_private_key_path())
         self.destination_table = "{0}{1}.{2}".format(self.dataset_prefix, "1",
                                                      TABLE_ID)
+        self.destination_date_partitioned_table = "{0}{1}.{2}".format(self.dataset_prefix, "1",
+                                                                      DPT_TABLE_ID)
         self.dataset.create(self.dataset_prefix + "1")
 
     @classmethod
@@ -1093,6 +1096,79 @@ class TestToGBQIntegrationWithServiceAccountKeyPath(object):
                               project_id=_get_project_id(),
                               private_key=_get_private_key_path())
         assert result['num_rows'][0] == 5
+    
+    def test_upload_data_if_table_exists_replace_dpt_partition(self):
+        test_dpt_suffix = "20170101"
+        test_size = 10
+        df = make_mixed_dataframe_v2(test_size)
+        df_different_schema = tm.makeMixedDataFrame()
+        
+        dpt_partition = self.destination_date_partitioned_table + '$' + test_dpt_suffix
+
+        gbq.to_gbq(df, dpt_partition, _get_project_id(),
+                   chunksize=10000, private_key=_get_private_key_path())
+        
+        gbq.to_gbq(df_different_schema, dpt_partition,
+                   _get_project_id(), if_exists='replace',
+                   private_key=_get_private_key_path())
+        
+        sleep(30)
+        
+        # Test whole table
+        result0 = gbq.read_gbq("SELECT COUNT(*) AS num_rows FROM {0}"
+                               .format(self.destination_date_partitioned_table),
+                               project_id=_get_project_id(),
+                               private_key=_get_private_key_path())
+        assert result0['num_rows'][0] == 5
+        
+        # Test destination partition
+        result1 = gbq.read_gbq("SELECT COUNT(*) AS num_rows FROM {0}"
+                               .format(dpt_partition),
+                               project_id=_get_project_id(),
+                               private_key=_get_private_key_path())
+        assert result1['num_rows'][0] == 5
+
+    def test_upload_data_if_table_exists_append_dpt_partition(self):
+        test_dpt_suffix = "20170101"
+        test_size = 10
+        df = make_mixed_dataframe_v2(test_size)
+
+        dpt_partition = self.destination_date_partitioned_table + '$' + test_dpt_suffix
+
+        result0 = gbq.read_gbq("SELECT COUNT(*) AS num_rows FROM {0}"
+                               .format(dpt_partition),
+                               project_id=_get_project_id(),
+                               private_key=_get_private_key_path())
+        assert result0['num_rows'][0] == 5
+
+        gbq.to_gbq(df, dpt_partition,
+                   _get_project_id(), if_exists='append',
+                   private_key=_get_private_key_path())
+
+        result1 = gbq.read_gbq("SELECT COUNT(*) AS num_rows FROM {0}"
+                               .format(dpt_partition),
+                               project_id=_get_project_id(),
+                               private_key=_get_private_key_path())
+
+        assert result1['num_rows'][0] == 15
+
+
+
+        sleep(30)
+
+        # Test whole table
+        result0 = gbq.read_gbq("SELECT COUNT(*) AS num_rows FROM {0}"
+                               .format(self.destination_date_partitioned_table),
+                               project_id=_get_project_id(),
+                               private_key=_get_private_key_path())
+        assert result0['num_rows'][0] == 5
+
+        # Test destination partition
+        result1 = gbq.read_gbq("SELECT COUNT(*) AS num_rows FROM {0}"
+                               .format(dpt_partition),
+                               project_id=_get_project_id(),
+                               private_key=_get_private_key_path())
+        assert result1['num_rows'][0] == 10
 
     def test_upload_data_if_table_exists_raises_value_error(self):
         test_id = "4"
@@ -1117,7 +1193,7 @@ class TestToGBQIntegrationWithServiceAccountKeyPath(object):
         with tm.assertRaises(gbq.StreamingInsertError):
             gbq.to_gbq(bad_df, self.destination_table + test_id,
                        _get_project_id(), private_key=_get_private_key_path())
-
+    
     def test_generate_schema(self):
         df = tm.makeMixedDataFrame()
         schema = gbq._generate_bq_schema(df)
