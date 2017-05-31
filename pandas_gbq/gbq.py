@@ -768,7 +768,8 @@ def read_gbq(query, project_id=None, index_col=None, col_order=None,
 
 
 def to_gbq(dataframe, destination_table, project_id, chunksize=10000,
-           verbose=True, reauth=False, if_exists='fail', private_key=None):
+           verbose=True, reauth=False, if_exists='fail', private_key=None,
+           table_schema=None):
     """Write a DataFrame to a Google BigQuery table.
 
     The main method a user calls to export pandas DataFrame contents to
@@ -831,7 +832,10 @@ def to_gbq(dataframe, destination_table, project_id, chunksize=10000,
     table = _Table(project_id, dataset_id, reauth=reauth,
                    private_key=private_key)
 
-    table_schema = _generate_bq_schema(dataframe)
+    if not table_schema:
+        table_schema = _generate_bq_schema(dataframe)
+    else:
+        table_schema = dict(fields=table_schema)
 
     # If table exists, check if_exists parameter
     if table.exists(table_id):
