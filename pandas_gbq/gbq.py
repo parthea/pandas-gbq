@@ -582,26 +582,6 @@ class GbqConnector(object):
         except HttpError as ex:
             self.process_http_error(ex)
 
-    def delete_and_recreate_table(self, dataset_id, table_id, table_schema):
-        delay = 0
-
-        # Changes to table schema may take up to 2 minutes as of May 2015 See
-        # `Issue 191
-        # <https://code.google.com/p/google-bigquery/issues/detail?id=191>`__
-        # Compare previous schema with new schema to determine if there should
-        # be a 120 second delay
-
-        if not self.verify_schema(dataset_id, table_id, table_schema):
-            self._print('The existing table has a different schema. Please '
-                        'wait 2 minutes. See Google BigQuery issue #191')
-            delay = 120
-
-        table = _Table(self.project_id, dataset_id,
-                       private_key=self.private_key)
-        table.delete(table_id)
-        table.create(table_id, table_schema)
-        sleep(delay)
-
 
 def _parse_data(schema, rows):
     # see:
