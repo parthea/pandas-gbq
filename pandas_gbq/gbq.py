@@ -816,6 +816,11 @@ def to_gbq(dataframe, destination_table, project_id, chunksize=10000,
         Service account private key in JSON format. Can be file path
         or string contents. This is useful for remote server
         authentication (eg. jupyter iPython notebook on remote host)
+    table_schema : list of dicts
+        List of BigQuery table fields to which according DataFrame columns
+        conform to, e.g. `[{'name': 'col1', 'type': 'STRING'},...]`. If
+        schema is not provided, it will be generated according to dtypes
+        of DataFrame columns.
     """
 
     if if_exists not in ('fail', 'replace', 'append'):

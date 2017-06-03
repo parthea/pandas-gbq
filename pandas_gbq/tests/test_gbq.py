@@ -1258,6 +1258,34 @@ class TestToGBQIntegrationWithServiceAccountKeyPath(object):
         assert self.sut.verify_schema(
             self.dataset_prefix + "1", TABLE_ID + test_id, test_schema_2)
 
+    def test_upload_data_with_valid_user_schema(self):
+        df = tm.makeMixedDataFrame()
+        test_id = "15"
+        test_schema = [{'name': 'A', 'type': 'FLOAT'},
+                       {'name': 'B', 'type': 'FLOAT'},
+                       {'name': 'C', 'type': 'STRING'},
+                       {'name': 'D', 'type': 'TIMESTAMP'}]
+        destination_table = self.destination_table + test_id
+        gbq.to_gbq(df, destination_table, _get_project_id(),
+                   private_key=_get_private_key_path(),
+                   table_schema=test_schema)
+        dataset, table = destination_table.split('.')
+        assert self.table.verify_schema(dataset, table,
+                                        dict(fields=test_schema))
+
+    def test_upload_data_with_invalid_user_schema_raises_error(self):
+        df = tm.makeMixedDataFrame()
+        test_id = "16"
+        test_schema = [{'name': 'A', 'type': 'FLOAT'},
+                       {'name': 'B', 'type': 'FLOAT'},
+                       {'name': 'C', 'type': 'FLOAT'},
+                       {'name': 'D', 'type': 'FLOAT'}]
+        destination_table = self.destination_table + test_id
+        with tm.assertRaises(gbq.StreamingInsertError):
+            gbq.to_gbq(df, destination_table, _get_project_id(),
+                       private_key=_get_private_key_path(),
+                       table_schema=test_schema)
+
     def test_list_dataset(self):
         dataset_id = self.dataset_prefix + "1"
         assert dataset_id in self.dataset.datasets()
