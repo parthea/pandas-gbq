@@ -37,6 +37,7 @@ install:
       pip install -r "$REQ.pip";
     else
       conda install --file "$REQ.conda";
+      if conda list | grep 'flake8-import-order'; then conda remove -y flake8-import-order; fi
     fi
   - conda list
   - python setup.py install
