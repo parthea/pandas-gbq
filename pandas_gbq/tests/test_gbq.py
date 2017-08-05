@@ -6,7 +6,6 @@ import pytz
 from time import sleep
 import os
 from random import randint
-import logging
 
 import numpy as np
 
@@ -89,10 +88,6 @@ def _setup_common():
         _test_imports()
     except (ImportError, NotImplementedError) as import_exception:
         pytest.skip(str(import_exception))
-
-    if _in_travis_environment():
-        logging.getLogger('oauth2client').setLevel(logging.ERROR)
-        logging.getLogger('apiclient').setLevel(logging.ERROR)
 
 
 def _check_if_can_get_correct_default_credentials():
