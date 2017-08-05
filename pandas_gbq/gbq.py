@@ -1149,7 +1149,7 @@ class _Table(GbqConnector):
 
         Parameters
         ----------
-        table : str
+        table_id : str
             Name of table to be written
         schema : str
             Use the generate_bq_schema to generate your table schema from a
@@ -1187,7 +1187,7 @@ class _Table(GbqConnector):
 
         Parameters
         ----------
-        table : str
+        table_id : str
             Name of table to be deleted
         """
 
@@ -1245,10 +1245,6 @@ class _Dataset(GbqConnector):
     def datasets(self):
         """ Return a list of datasets in Google BigQuery
 
-        Parameters
-        ----------
-        None
-
         Returns
         -------
         list
@@ -1290,7 +1286,7 @@ class _Dataset(GbqConnector):
 
         Parameters
         ----------
-        dataset : str
+        dataset_id : str
             Name of dataset to be written
         """
 
@@ -1317,7 +1313,7 @@ class _Dataset(GbqConnector):
 
         Parameters
         ----------
-        dataset : str
+        dataset_id : str
             Name of dataset to be deleted
         """
 
@@ -1340,7 +1336,7 @@ class _Dataset(GbqConnector):
 
         Parameters
         ----------
-        dataset : str
+        dataset_id : str
             Name of dataset to list tables for
 
         Returns

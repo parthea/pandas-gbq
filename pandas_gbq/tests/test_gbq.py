@@ -6,7 +6,6 @@ import pytz
 from time import sleep
 import os
 from random import randint
-import logging
 
 import numpy as np
 
@@ -90,10 +89,6 @@ def _setup_common():
     except (ImportError, NotImplementedError) as import_exception:
         pytest.skip(str(import_exception))
 
-    if _in_travis_environment():
-        logging.getLogger('oauth2client').setLevel(logging.ERROR)
-        logging.getLogger('apiclient').setLevel(logging.ERROR)
-
 
 def _check_if_can_get_correct_default_credentials():
     # Checks if "Application Default Credentials" can be fetched
@@ -118,7 +113,7 @@ def clean_gbq_environment(dataset_prefix, private_key=None):
     retry = 3
     while retry > 0:
         try:
-            retry = retry - 1
+            retry -= 1
             for i in range(1, 10):
                 dataset_id = dataset_prefix + str(i)
                 if dataset_id in all_datasets:
@@ -136,7 +131,7 @@ def clean_gbq_environment(dataset_prefix, private_key=None):
                             except gbq.NotFoundException:
                                 pass
                         sleep(1)
-                        table_retry = table_retry - 1
+                        table_retry -= 1
                         all_tables = dataset.tables(dataset_id)
 
                     dataset.delete(dataset_id)
@@ -160,7 +155,7 @@ def make_mixed_dataframe_v2(test_size):
     ints = np.random.randint(1, 10, size=(1, test_size))
     strs = np.random.randint(1, 10, size=(1, test_size)).astype(str)
     times = [datetime.now(pytz.timezone('US/Arizona'))
-             for t in range(test_size)]
+             for _ in range(test_size)]
     return DataFrame({'bools': bools[0],
                       'flts': flts[0],
                       'ints': ints[0],
@@ -178,7 +173,7 @@ def test_generate_bq_schema_deprecated():
 
 class TestGBQConnectorIntegrationWithLocalUserAccountAuth(object):
 
-    def setup_method(self, method):
+    def setup_method(self):
         _setup_common()
         _skip_if_no_project_id()
         _skip_local_auth_if_in_travis_env()
@@ -240,7 +235,7 @@ class TestGBQConnectorIntegrationWithLocalUserAccountAuth(object):
 
 class TestGBQConnectorIntegrationWithServiceAccountKeyPath(object):
 
-    def setup_method(self, method):
+    def setup_method(self):
         _setup_common()
 
         _skip_if_no_project_id()
@@ -271,7 +266,7 @@ class TestGBQConnectorIntegrationWithServiceAccountKeyPath(object):
 
 class TestGBQConnectorIntegrationWithServiceAccountKeyContents(object):
 
-    def setup_method(self, method):
+    def setup_method(self):
         _setup_common()
 
         _skip_if_no_project_id()
@@ -302,7 +297,7 @@ class TestGBQConnectorIntegrationWithServiceAccountKeyContents(object):
 
 class GBQUnitTests(object):
 
-    def setup_method(self, method):
+    def setup_method(self):
         _setup_common()
 
     def test_import_google_api_python_client(self):
@@ -403,7 +398,7 @@ class TestReadGBQIntegration(object):
 
         _setup_common()
 
-    def setup_method(self, method):
+    def setup_method(self):
         # - PER-TEST FIXTURES -
         # put here any instruction you want to be run *BEFORE* *EVERY* test is
         # executed.
@@ -416,7 +411,7 @@ class TestReadGBQIntegration(object):
         # executing all tests.
         pass
 
-    def teardown_method(self, method):
+    def teardown_method(self):
         # - PER-TEST FIXTURES -
         # put here any instructions you want to be run *AFTER* *EVERY* test is
         # executed.
@@ -457,7 +452,7 @@ class TestReadGBQIntegrationWithServiceAccountKeyPath(object):
 
         _setup_common()
 
-    def setup_method(self, method):
+    def setup_method(self):
         # - PER-TEST FIXTURES -
         # put here any instruction you want to be run *BEFORE* *EVERY* test is
         # executed.
@@ -508,7 +503,7 @@ class TestReadGBQIntegrationWithServiceAccountKeyPath(object):
         df = gbq.read_gbq(query, project_id=_get_project_id(),
                           private_key=_get_private_key_path())
         tm.assert_frame_equal(
-            df, DataFrame({'nullable_integer': [1, None]}).astype(object))
+            df, DataFrame({'nullable_integer': [1, None]}))
 
     def test_should_properly_handle_valid_longs(self):
         query = 'SELECT 1 << 62 AS valid_long'
@@ -524,7 +519,7 @@ class TestReadGBQIntegrationWithServiceAccountKeyPath(object):
         df = gbq.read_gbq(query, project_id=_get_project_id(),
                           private_key=_get_private_key_path())
         tm.assert_frame_equal(
-            df, DataFrame({'nullable_long': [1 << 62, None]}).astype(object))
+            df, DataFrame({'nullable_long': [1 << 62, None]}))
 
     def test_should_properly_handle_null_integers(self):
         query = 'SELECT INTEGER(NULL) AS null_integer'
@@ -620,7 +615,7 @@ class TestReadGBQIntegrationWithServiceAccountKeyPath(object):
         df = gbq.read_gbq(query, project_id=_get_project_id(),
                           private_key=_get_private_key_path())
         tm.assert_frame_equal(
-            df, DataFrame({'nullable_boolean': [True, None]}).astype(object))
+            df, DataFrame({'nullable_boolean': [True, None]}))
 
     def test_unicode_string_conversion_and_normalization(self):
         correct_test_datatype = DataFrame(
@@ -838,7 +833,7 @@ class TestReadGBQIntegrationWithServiceAccountKeyPath(object):
                          private_key=_get_private_key_path(),
                          configuration=config)
 
-        df = gbq.read_gbq(None, project_id=_get_project_id(),
+        df = gbq.read_gbq("", project_id=_get_project_id(),
                           private_key=_get_private_key_path(),
                           configuration=config)
         tm.assert_frame_equal(df, DataFrame({'valid_string': ['PI']}))
@@ -931,7 +926,7 @@ class TestToGBQIntegrationWithServiceAccountKeyPath(object):
 
         _setup_common()
 
-    def setup_method(self, method):
+    def setup_method(self):
         # - PER-TEST FIXTURES -
         # put here any instruction you want to be run *BEFORE* *EVERY* test is
         # executed.
@@ -955,7 +950,7 @@ class TestToGBQIntegrationWithServiceAccountKeyPath(object):
         # executing all tests.
         pass
 
-    def teardown_method(self, method):
+    def teardown_method(self):
         # - PER-TEST FIXTURES -
         # put here any instructions you want to be run *AFTER* *EVERY* test is
         # executed.
@@ -1375,7 +1370,7 @@ class TestToGBQIntegrationWithLocalUserAccountAuth(object):
 
         _setup_common()
 
-    def setup_method(self, method):
+    def setup_method(self):
         # - PER-TEST FIXTURES -
         # put here any instruction you want to be run *BEFORE* *EVERY* test
         # is executed.
@@ -1434,7 +1429,7 @@ class TestToGBQIntegrationWithServiceAccountKeyContents(object):
 
         _skip_if_no_private_key_contents()
 
-    def setup_method(self, method):
+    def setup_method(self):
         # - PER-TEST FIXTURES -
         # put here any instruction you want to be run *BEFORE* *EVERY* test
         # is executed.
@@ -1450,7 +1445,7 @@ class TestToGBQIntegrationWithServiceAccountKeyContents(object):
         # executing all tests.
         pass
 
-    def teardown_method(self, method):
+    def teardown_method(self):
         # - PER-TEST FIXTURES -
         # put here any instructions you want to be run *AFTER* *EVERY* test
         # is executed.
